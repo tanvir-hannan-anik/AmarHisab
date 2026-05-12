@@ -1,0 +1,23 @@
+# Things Vercel doesn't need to deploy — keeps the function bundle small
+# and prevents accidental publication of secrets / artifacts.
+
+node_modules/
+server/
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firebase.json
+.firebaserc
+
+# Local-only docs
+DEPLOY.md
+render.yaml
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Legacy artifact from the previous (broken) vercel.json postBuildCommand
+public/index.html
