@@ -10,7 +10,7 @@
     "build": "npm install --prefix server"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "20.13.0"
   },
   "dependencies": {
     "firebase": "^12.13.0"
