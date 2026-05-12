@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm install --prefix server",
+  "postBuildCommand": "cp index.html public/ && cp -r src/public/* public/ 2>/dev/null || true",
+  "outputDirectory": "public",
+  "framework": "react",
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
