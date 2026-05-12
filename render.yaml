@@ -1,0 +1,43 @@
+# Render Blueprint — defines the service so a fresh deploy can be recreated
+# by simply pointing Render at this repo. Edit values as needed.
+#
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: amar-hisab
+    runtime: node
+    plan: free                          # change to "starter" ($7/mo) to attach a persistent disk
+    region: singapore                   # pick the region nearest your users
+    branch: main                        # branch to auto-deploy from
+    autoDeploy: true
+
+    # Render runs these from the repo root.
+    buildCommand: npm run build         # installs deps inside server/ (better-sqlite3 needs build tools)
+    startCommand: npm start             # runs server/src/index.js → serves API + static frontend on the same port
+
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000                     # Render injects $PORT automatically; this is a fallback
+      - key: JWT_SECRET
+        generateValue: true             # Render generates a long random value the first deploy
+      - key: JWT_EXPIRES
+        value: 30d
+      - key: CORS_ORIGIN
+        value: "*"                      # tighten to your domain(s) once you have a custom URL
+      - key: BCRYPT_ROUNDS
+        value: 10
+      - key: SERVE_STATIC
+        value: "1"                      # serve the frontend from the same process
+      - key: DB_PATH
+        value: ./data/amar-hisab.db     # on a free dyno this is EPHEMERAL — see README for persistent disk setup
+
+    # Uncomment after upgrading to the Starter plan ($7/mo) to get persistent SQLite storage:
+    # disk:
+    #   name: data
+    #   mountPath: /opt/render/project/src/server/data
+    #   sizeGB: 1

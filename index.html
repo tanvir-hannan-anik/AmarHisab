@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#1F6FB2"/>
+  <meta name="description" content="আমার হিসাব — ব্যক্তিগত অর্থ ব্যবস্থাপনার অ্যাপ"/>
+  <title>আমার হিসাব — Amar Hisab</title>
+  <link rel="icon" type="image/png" href="src/public/favicon.png"/>
+  <link rel="apple-touch-icon" href="src/public/favicon.png"/>
+  <link rel="stylesheet" href="src/styles/app.css"/>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!--
+    Load order matters: each module attaches helpers to `window` and later
+    modules read them. The dependency direction is:
+
+      config  → utils  → services  → components  → modals  → pages  → App
+  -->
+
+  <!-- React + Babel-standalone (in-browser JSX). No build step. -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Firebase SDK (compat builds — exposes the global `firebase` so our
+       non-modular scripts can use it without a build step). -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+  <!-- Config + utils (pure JS) -->
+  <script src="src/config/categories.js"></script>
+  <script src="src/config/firebase.js"></script>
+  <script src="src/utils/format.js"></script>
+
+  <!-- Services -->
+  <script src="src/services/api.js"></script>
+  <script src="src/services/firebase.js"></script>
+  <script src="src/services/storage.js"></script>
+
+  <!-- Components: shared visuals (Icon must come first; others use it) -->
+  <script type="text/babel" src="src/components/Icon.jsx"></script>
+  <script type="text/babel" src="src/components/TweaksPanel.jsx"></script>
+  <script type="text/babel" src="src/components/notify.jsx"></script>
+  <script type="text/babel" src="src/components/charts.jsx"></script>
+  <script type="text/babel" src="src/components/widgets.jsx"></script>
+  <script type="text/babel" src="src/components/nav.jsx"></script>
+  <script type="text/babel" src="src/components/drawers.jsx"></script>
+  <script type="text/babel" src="src/components/AIAdvice.jsx"></script>
+  <script type="text/babel" src="src/components/profile.jsx"></script>
+
+  <!-- Modals (AddTxModal first — it declares useModalShell + FieldError that the other two reuse) -->
+  <script type="text/babel" src="src/modals/AddTxModal.jsx"></script>
+  <script type="text/babel" src="src/modals/AddDebtModal.jsx"></script>
+  <script type="text/babel" src="src/modals/BudgetModal.jsx"></script>
+  <script type="text/babel" src="src/modals/AuthModal.jsx"></script>
+
+  <!-- Pages -->
+  <script type="text/babel" src="src/pages/DashboardScreen.jsx"></script>
+  <script type="text/babel" src="src/pages/HistoryScreen.jsx"></script>
+  <script type="text/babel" src="src/pages/DebtScreen.jsx"></script>
+  <script type="text/babel" src="src/pages/BudgetScreen.jsx"></script>
+  <script type="text/babel" src="src/pages/ReportsScreen.jsx"></script>
+  <script type="text/babel" src="src/pages/RemindersScreen.jsx"></script>
+  <script type="text/babel" src="src/pages/SettingsScreen.jsx"></script>
+
+  <!-- Root -->
+  <script type="text/babel" src="src/App.jsx" data-asset="Amar Hisab"></script>
+</body>
+</html>
