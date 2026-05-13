@@ -100,6 +100,7 @@ function loadSettings() {
     notifyBudget: true,
     notifyDebt: true,
     palette: ['#1F6FB2', '#4FB38A', '#DCEBF8'],
+    lang: 'bn',
   };
   const stored = readJSON(AH_KEYS.settings, null);
   return stored ? { ...defaults, ...stored } : defaults;

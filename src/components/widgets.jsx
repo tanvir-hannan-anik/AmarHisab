@@ -22,11 +22,10 @@ function StatCard({ label, value, icon, tone, meta }) {
   );
 }
 
-// Renders the time portion of an ISO date in Bengali numerals with AM/PM
-// translated to পূর্বাহ্ণ / অপরাহ্ণ. Used by TxRow.
 function fmtTimeBn(iso) {
-  return new Date(iso)
-    .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const t = new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (window.AHLang === 'en') return t;
+  return t
     .replace(/[0-9]/g, d => ['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d])
     .replace('AM', 'পূর্বাহ্ণ')
     .replace('PM', 'অপরাহ্ণ');
@@ -40,7 +39,7 @@ function TxRow({ tx, onEdit, onDelete }) {
       <div className="ah-tx-body">
         <div className="ah-tx-name">{tx.desc}</div>
         <div className="ah-tx-meta">
-          <span>{c.bn}</span><span className="sep">·</span>
+          <span>{window.AHLang === 'en' ? (c.en || c.bn) : c.bn}</span><span className="sep">·</span>
           <span>{fmtTimeBn(tx.date)}</span>
         </div>
       </div>
@@ -48,12 +47,12 @@ function TxRow({ tx, onEdit, onDelete }) {
       {(onEdit || onDelete) && (
         <div className="ah-tx-actions">
           {onEdit && (
-            <button className="ah-tx-act" aria-label="সম্পাদনা" onClick={() => onEdit(tx)}>
+            <button className="ah-tx-act" aria-label={window.t('w_edit')} onClick={() => onEdit(tx)}>
               <Icon name="edit" size={14}/>
             </button>
           )}
           {onDelete && (
-            <button className="ah-tx-act danger" aria-label="মুছুন" onClick={() => onDelete(tx)}>
+            <button className="ah-tx-act danger" aria-label={window.t('w_delete')} onClick={() => onDelete(tx)}>
               <Icon name="trash" size={14}/>
             </button>
           )}
@@ -76,11 +75,11 @@ function PersonRow({ debt, onSettle, onEdit }) {
       </div>
       <div className="ah-person-actions">
         {onEdit && (
-          <button className="ah-tx-act" aria-label="সম্পাদনা" onClick={() => onEdit(debt)}>
+          <button className="ah-tx-act" aria-label={window.t('w_edit')} onClick={() => onEdit(debt)}>
             <Icon name="edit" size={14}/>
           </button>
         )}
-        {onSettle && <button className="ah-person-action" onClick={() => onSettle(debt.id)}>মিটানো</button>}
+        {onSettle && <button className="ah-person-action" onClick={() => onSettle(debt.id)}>{window.t('w_settle')}</button>}
       </div>
     </div>
   );

@@ -25,14 +25,14 @@ function Sidebar({ tab, setTab, debts, openTx, onCloseDrawer, settings, navItems
     <aside className="ah-side">
       <div className="ah-brand">
         <div className="ah-brand-mark">
-          <img src="src/public/logo.png" alt="আমার হিসাব" />
+          <img src="src/public/logo.png" alt="Amar Hisab" />
         </div>
         <div>
-          <div className="ah-brand-name">আমার হিসাব</div>
-          <div className="ah-brand-sub">ব্যক্তিগত অর্থ</div>
+          <div className="ah-brand-name">{window.t('n_brand')}</div>
+          <div className="ah-brand-sub">{window.t('n_brand_sub')}</div>
         </div>
         {onCloseDrawer && (
-          <button className="ah-icon-btn ah-side-close" aria-label="বন্ধ করুন" onClick={onCloseDrawer}>
+          <button className="ah-icon-btn ah-side-close" aria-label={window.t('n_close')} onClick={onCloseDrawer}>
             <Icon name="x" size={16}/>
           </button>
         )}
@@ -40,11 +40,11 @@ function Sidebar({ tab, setTab, debts, openTx, onCloseDrawer, settings, navItems
 
       <button className="ah-add-btn" onClick={() => { openTx(); if (onCloseDrawer) onCloseDrawer(); }}>
         <Icon name="plus" size={18}/>
-        হিসাব যোগ করুন
+        {window.t('n_add_tx')}
       </button>
 
       <div className="ah-nav">
-        <div className="ah-nav-eyebrow">মূল মেনু</div>
+        <div className="ah-nav-eyebrow">{window.t('n_main_menu')}</div>
         {navItems.map(item => (
           <button
             key={item.id}
@@ -59,7 +59,7 @@ function Sidebar({ tab, setTab, debts, openTx, onCloseDrawer, settings, navItems
           </button>
         ))}
 
-        <div className="ah-nav-eyebrow">অন্যান্য</div>
+        <div className="ah-nav-eyebrow">{window.t('n_others')}</div>
         {secondaryNav.map(item => (
           <button
             key={item.id}
@@ -85,7 +85,7 @@ function Sidebar({ tab, setTab, debts, openTx, onCloseDrawer, settings, navItems
 
 function MobileBottomNav({ tab, setTab, onAdd, navItems }) {
   return (
-    <nav className="ah-bottom-nav" role="tablist" aria-label="মূল মেনু">
+    <nav className="ah-bottom-nav" role="tablist" aria-label={window.t('n_main_menu')}>
       {navItems.slice(0, 2).map(it => (
         <button key={it.id} role="tab" aria-selected={tab === it.id}
           className={'ah-bn-item ' + (tab === it.id ? 'active' : '')}
@@ -94,7 +94,7 @@ function MobileBottomNav({ tab, setTab, onAdd, navItems }) {
           <span>{it.label}</span>
         </button>
       ))}
-      <button className="ah-bn-add" onClick={onAdd} aria-label="হিসাব যোগ করুন">
+      <button className="ah-bn-add" onClick={onAdd} aria-label={window.t('n_add_tx')}>
         <Icon name="plus" size={22}/>
       </button>
       {navItems.slice(2).map(it => (

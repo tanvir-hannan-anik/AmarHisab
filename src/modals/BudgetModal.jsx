@@ -14,8 +14,8 @@ function BudgetModal({ current, onClose, onSave }) {
 
   const submit = () => {
     const n = parseInt(amount, 10);
-    if (!n || n <= 0) { setError('বৈধ পরিমাণ লিখুন'); return; }
-    if (n > 99999999) { setError('পরিমাণ অনেক বেশি'); return; }
+    if (!n || n <= 0) { setError(window.t('mb_err_invalid')); return; }
+    if (n > 99999999) { setError(window.t('mb_err_large')); return; }
     onSave(n);
     onClose();
   };
@@ -24,17 +24,17 @@ function BudgetModal({ current, onClose, onSave }) {
     <div className="ah-modal-overlay" onClick={onClose}>
       <div className="ah-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 400}} role="dialog" aria-modal="true">
         <div className="ah-modal-head">
-          <div className="ah-modal-title">মাসিক বাজেট নির্ধারণ</div>
-          <button className="ah-icon-btn" onClick={onClose} aria-label="বন্ধ করুন" style={{width: 32, height: 32}}>
+          <div className="ah-modal-title">{window.t('mb_title')}</div>
+          <button className="ah-icon-btn" onClick={onClose} aria-label={window.t('mb_close')} style={{width: 32, height: 32}}>
             <Icon name="x" size={16}/>
           </button>
         </div>
         <div className="ah-modal-body">
           <p style={{margin: 0, fontSize: 13, color: '#6B737C', lineHeight: 1.55}}>
-            এই মাসে আপনি সর্বোচ্চ কত টাকা খরচ করতে চান? আমরা আপনাকে সীমার কাছাকাছি পৌঁছালে জানাব।
+            {window.t('mb_desc')}
           </p>
           <div className="ah-field">
-            <label className="ah-field-label">বাজেট পরিমাণ</label>
+            <label className="ah-field-label">{window.t('mb_amount_label')}</label>
             <div style={{position: 'relative'}}>
               <span style={{position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', fontSize: 22, color: '#9AA3AC', fontWeight: 500}}>৳</span>
               <input
@@ -55,8 +55,8 @@ function BudgetModal({ current, onClose, onSave }) {
           </div>
         </div>
         <div className="ah-modal-foot">
-          <button className="ah-btn ah-btn-ghost" onClick={onClose}>বাতিল</button>
-          <button className="ah-btn ah-btn-primary" onClick={submit}>নিশ্চিত করুন</button>
+          <button className="ah-btn ah-btn-ghost" onClick={onClose}>{window.t('mb_cancel')}</button>
+          <button className="ah-btn ah-btn-primary" onClick={submit}>{window.t('mb_confirm')}</button>
         </div>
       </div>
     </div>

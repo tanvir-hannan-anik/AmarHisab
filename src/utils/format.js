@@ -14,27 +14,38 @@ function toBn(num) {
   return String(num).replace(/[0-9]/g, (d) => BN_DIGITS[+d]);
 }
 
-// Indian/Bangladeshi grouping (1,23,456) rendered in Bengali numerals.
+// Indian/Bangladeshi grouping: Bengali digits in bn mode, English digits in en mode.
 function fmtTk(num) {
   const n = Math.round(Math.abs(num));
+  if (window.AHLang === 'en') return n.toLocaleString('en-IN');
   return toBn(n.toLocaleString('en-IN'));
 }
 
-// "৫ মে, ২০২৬" — full date for transaction details.
+// Full date: "৫ মে, ২০২৬" (bn) or "May 5, 2026" (en).
 function fmtDateBn(iso) {
-  const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
   const d = new Date(iso);
+  if (window.AHLang === 'en') {
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
   return `${toBn(d.getDate())} ${months[d.getMonth()]}, ${toBn(d.getFullYear())}`;
 }
 
-// "আজ · সোমবার", "গতকাল · রবিবার", or "৫ মে · বুধবার" — used as group headers.
+// Day group header: "Today · Monday" (en) or "আজ · সোমবার" (bn).
 function fmtDayHead(iso) {
-  const days = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
-  const months = ['জানু','ফেব্রু','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্ট','অক্টো','নভে','ডিসে'];
   const d = new Date(iso);
   const today = new Date();
   const yest = new Date(); yest.setDate(today.getDate() - 1);
   const sameDay = (a, b) => a.toDateString() === b.toDateString();
+  if (window.AHLang === 'en') {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    if (sameDay(d, today)) return 'Today · ' + days[d.getDay()];
+    if (sameDay(d, yest)) return 'Yesterday · ' + days[d.getDay()];
+    return `${d.getDate()} ${months[d.getMonth()]} · ${days[d.getDay()]}`;
+  }
+  const days = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+  const months = ['জানু','ফেব্রু','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্ট','অক্টো','নভে','ডিসে'];
   if (sameDay(d, today)) return 'আজ · ' + days[d.getDay()];
   if (sameDay(d, yest)) return 'গতকাল · ' + days[d.getDay()];
   return `${toBn(d.getDate())} ${months[d.getMonth()]} · ${days[d.getDay()]}`;

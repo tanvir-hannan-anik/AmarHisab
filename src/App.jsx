@@ -11,33 +11,44 @@
 
 const { useState, useEffect, useCallback } = React;
 
-// ── Menu definitions ─────────────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: 'dashboard' },
-  { id: 'history',   label: 'লেনদেন',     icon: 'list' },
-  { id: 'debts',     label: 'দেনা-পাওনা', icon: 'handshake' },
-  { id: 'budget',    label: 'বাজেট',       icon: 'target' },
-];
+// ── Menu definitions — built at render time so they reflect the active language.
+function buildNavItems(s) {
+  return [
+    { id: 'dashboard', label: s.nav_dashboard, icon: 'dashboard' },
+    { id: 'history',   label: s.nav_history,   icon: 'list' },
+    { id: 'debts',     label: s.nav_debts,      icon: 'handshake' },
+    { id: 'budget',    label: s.nav_budget,     icon: 'target' },
+  ];
+}
 
-const SECONDARY_NAV = [
-  { id: 'reports',   label: 'প্রতিবেদন',   icon: 'piechart' },
-  { id: 'reminders', label: 'রিমাইন্ডার',  icon: 'bell' },
-  { id: 'settings',  label: 'সেটিংস',     icon: 'settings' },
-];
+function buildSecondaryNav(s) {
+  return [
+    { id: 'reports',   label: s.nav_reports,   icon: 'piechart' },
+    { id: 'reminders', label: s.nav_reminders, icon: 'bell' },
+    { id: 'settings',  label: s.nav_settings,  icon: 'settings' },
+  ];
+}
 
-const SCREEN_TITLES = {
-  dashboard: { eyebrow: 'হোম', title: 'স্বাগতম, রাহুল', sub: 'এই মাসের আর্থিক চিত্র দেখুন' },
-  history:   { eyebrow: 'লেনদেন', title: 'সকল হিসাব', sub: 'খরচের ইতিহাস ও ফিল্টার' },
-  debts:     { eyebrow: 'দেনা-পাওনা', title: 'ধার-পরিচালনা', sub: 'ব্যক্তিগত দেনা ও পাওনা' },
-  budget:    { eyebrow: 'বাজেট', title: 'মাসিক পরিকল্পনা', sub: 'বাজেট ও খরচের তুলনা' },
-  reports:   { eyebrow: 'প্রতিবেদন', title: 'বিস্তারিত প্রতিবেদন', sub: 'শ্রেণী ও সময় অনুযায়ী বিশ্লেষণ' },
-  reminders: { eyebrow: 'রিমাইন্ডার', title: 'সক্রিয় রিমাইন্ডার', sub: 'গুরুত্বপূর্ণ স্মরণ ও সতর্কতা' },
-  settings:  { eyebrow: 'সেটিংস', title: 'অ্যাপ সেটিংস', sub: 'প্রোফাইল ও পছন্দসমূহ' },
-};
+function buildScreenTitles(s, name) {
+  const greeting = (s.welcome_prefix || '') + (name ? name.split(' ')[0] : '');
+  return {
+    dashboard: { eyebrow: s.screen_dashboard_eyebrow, title: greeting,                    sub: s.screen_dashboard_sub },
+    history:   { eyebrow: s.screen_history_eyebrow,   title: s.screen_history_title,      sub: s.screen_history_sub },
+    debts:     { eyebrow: s.screen_debts_eyebrow,     title: s.screen_debts_title,        sub: s.screen_debts_sub },
+    budget:    { eyebrow: s.screen_budget_eyebrow,    title: s.screen_budget_title,       sub: s.screen_budget_sub },
+    reports:   { eyebrow: s.screen_reports_eyebrow,   title: s.screen_reports_title,      sub: s.screen_reports_sub },
+    reminders: { eyebrow: s.screen_reminders_eyebrow, title: s.screen_reminders_title,    sub: s.screen_reminders_sub },
+    settings:  { eyebrow: s.screen_settings_eyebrow,  title: s.screen_settings_title,     sub: s.screen_settings_sub },
+  };
+}
 
-function MonthLabel() {
-  const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+function MonthLabel(lang) {
   const d = new Date();
+  if (lang === 'en') {
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return `${months[d.getMonth()]}, ${d.getFullYear()}`;
+  }
+  const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
   return `${months[d.getMonth()]}, ${toBn(d.getFullYear())}`;
 }
 
@@ -75,7 +86,7 @@ function App() {
     root.style.setProperty('--brand-mint-700', p.mint700);
   }, [t.palette]);
 
-  const monthLabel = MonthLabel();
+  const monthLabel = MonthLabel(lang);
 
   // ── Persisted state ────────────────────────────────────────────────────────
   const [tab, setTab] = useState('dashboard');
@@ -84,6 +95,14 @@ function App() {
   const [budget, setBudgetState] = useState(() => AHStorage.loadBudget(0));
   const [catBudgets, setCatBudgetsState] = useState(() => AHStorage.loadCatBudgets());
   const [settings, setSettings] = useState(() => AHStorage.loadSettings());
+
+  // ── Language-aware strings ─────────────────────────────────────────────────
+  const lang = settings.lang || 'bn';
+  window.AHLang = lang; // global so child components + format utils can read it
+  const s = (window.AHStrings && window.AHStrings[lang]) || window.AHStrings.bn;
+  const NAV_ITEMS      = buildNavItems(s);
+  const SECONDARY_NAV  = buildSecondaryNav(s);
+  const SCREEN_TITLES  = buildScreenTitles(s, settings.name);
 
   // ── UI state ───────────────────────────────────────────────────────────────
   const [modal, setModal] = useState(null);
@@ -243,17 +262,17 @@ function App() {
 
   const handleSignOut = useCallback(async () => {
     const ok = await window.confirmDialog({
-      title: 'সাইন আউট',
-      message: 'আপনি কি সাইন আউট করতে চান? আপনার ডেটা এই ডিভাইসে অতিথি মোডে থাকবে।',
-      okLabel: 'সাইন আউট',
+      title: window.t('dlg_signout_title'),
+      message: window.t('dlg_signout_msg'),
+      okLabel: window.t('dlg_signout_ok'),
       tone: 'default',
     });
     if (!ok) return;
     try {
       if (window.AHFirebase) await window.AHFirebase.signOut();
-      window.toast.success('সাইন আউট হয়েছে');
+      window.toast.success(window.t('toast_signout'));
     } catch (e) {
-      window.toast.error('সাইন আউটে সমস্যা হয়েছে');
+      window.toast.error(window.t('toast_signout_err'));
     }
   }, []);
 
@@ -279,11 +298,11 @@ function App() {
     if (isEdit) {
       setTxs(prev => prev.map(x => x.id === tx.id ? tx : x));
       AHStorage.syncPut('transactions', tx.id, tx);
-      window.toast.success('হিসাব আপডেট হয়েছে');
+      window.toast.success(window.t('app_tx_updated'));
     } else {
       setTxs(prev => [tx, ...prev]);
       AHStorage.syncPush('transactions', tx);
-      window.toast.success('হিসাব সংরক্ষণ হয়েছে');
+      window.toast.success(window.t('app_tx_saved'));
     }
   }, []);
 
@@ -291,39 +310,39 @@ function App() {
     if (isEdit) {
       setDebts(prev => prev.map(x => x.id === d.id ? d : x));
       AHStorage.syncPut('debts', d.id, d);
-      window.toast.success('দেনা-পাওনা আপডেট হয়েছে');
+      window.toast.success(window.t('app_debt_updated'));
     } else {
       setDebts(prev => [d, ...prev]);
       AHStorage.syncPush('debts', d);
-      window.toast.success('দেনা-পাওনা সংরক্ষণ হয়েছে');
+      window.toast.success(window.t('app_debt_saved'));
     }
   }, []);
 
   const onEditTx = (tx) => { setEditingTx(tx); setModal('tx'); };
   const onDeleteTx = async (tx) => {
     const ok = await window.confirmDialog({
-      title: 'লেনদেন মুছুন',
-      message: `"${tx.desc}" — ৳${fmtTk(tx.amt)} মুছে ফেলবেন?`,
-      okLabel: 'মুছুন', tone: 'danger',
+      title: window.t('dlg_delete_tx_title'),
+      message: window.t('dlg_delete_tx_msg', { desc: tx.desc, amt: fmtTk(tx.amt) }),
+      okLabel: window.t('dlg_delete_tx_ok'), tone: 'danger',
     });
     if (!ok) return;
     setTxs(prev => prev.filter(x => x.id !== tx.id));
     AHStorage.syncDelete('transactions', tx.id);
-    window.toast.success('লেনদেন মুছে ফেলা হয়েছে');
+    window.toast.success(window.t('app_tx_deleted'));
   };
 
   const onEditDebt = (d) => { setEditingDebt(d); setModal('debt'); };
   const onSettleDebt = async (id) => {
     const d = debts.find(x => x.id === id);
     const ok = await window.confirmDialog({
-      title: 'মিটানো নিশ্চিত করুন',
-      message: d ? `${d.name} — ৳${fmtTk(d.amt)} মিটানো হিসেবে গণ্য হবে।` : 'মিটানো হিসেবে গণ্য হবে।',
-      okLabel: 'মিটানো', tone: 'default',
+      title: window.t('dlg_settle_title'),
+      message: d ? window.t('dlg_settle_msg', { name: d.name, amt: fmtTk(d.amt) }) : window.t('dlg_settle_ok'),
+      okLabel: window.t('dlg_settle_ok'), tone: 'default',
     });
     if (!ok) return;
     setDebts(prev => prev.filter(x => x.id !== id));
     AHStorage.syncDelete('debts', id);
-    window.toast.success('মিটানো হিসেবে চিহ্নিত হয়েছে');
+    window.toast.success(window.t('app_debt_settled'));
   };
 
   // Aggregated state object passed down to pages.
@@ -342,9 +361,7 @@ function App() {
   };
 
   const title = SCREEN_TITLES[tab] || SCREEN_TITLES.dashboard;
-  const personalizedTitle = tab === 'dashboard'
-    ? `স্বাগতম, ${settings.name ? settings.name.split(' ')[0] : 'রাহুল'}`
-    : title.title;
+  const personalizedTitle = title.title;
 
   const screenProps = {
     state, setState, openModal,
@@ -383,7 +400,7 @@ function App() {
       <main className="ah-main">
         <div className="ah-top">
           <div className="ah-top-l">
-            <button className="ah-icon-btn ah-menu-btn" aria-label="মেনু" onClick={() => setDrawerOpen(true)}>
+            <button className="ah-icon-btn ah-menu-btn" aria-label={s.topbar_menu} onClick={() => setDrawerOpen(true)}>
               <Icon name="list" size={18}/>
             </button>
             <div className="ah-top-title-wrap">
@@ -393,10 +410,10 @@ function App() {
           </div>
           <div className="ah-top-actions">
             <div className="ah-chip"><span className="dot"></span>{monthLabel}</div>
-            <button className="ah-icon-btn" title="খুঁজুন" aria-label="খুঁজুন" onClick={() => setSearchOpen(true)}>
+            <button className="ah-icon-btn" title={s.topbar_search} aria-label={s.topbar_search} onClick={() => setSearchOpen(true)}>
               <Icon name="search" size={18}/>
             </button>
-            <button className="ah-icon-btn" title="নোটিফিকেশন" aria-label="নোটিফিকেশন" onClick={() => setNotifOpen(true)}>
+            <button className="ah-icon-btn" title={s.topbar_notif} aria-label={s.topbar_notif} onClick={() => setNotifOpen(true)}>
               <Icon name="bell" size={18}/>
             </button>
           </div>
@@ -409,7 +426,7 @@ function App() {
           {tab === 'budget'    && <BudgetScreen    {...screenProps}/>}
           {tab === 'reports'   && <ReportsScreen   state={state}/>}
           {tab === 'reminders' && <RemindersScreen state={state}/>}
-          {tab === 'settings'  && <SettingsScreen  state={state} setState={setState} palette={t.palette} setPalette={setPalette}/>}
+          {tab === 'settings'  && <SettingsScreen  state={state} setState={setState} palette={t.palette} setPalette={setPalette} settings={settings} saveProfile={saveProfile} openAuthModal={openAuthModal} handleSignOut={handleSignOut}/>}
         </div>
       </main>
 
@@ -430,7 +447,7 @@ function App() {
       )}
       {modal === 'budget' && (
         <BudgetModal current={budget} onClose={closeModal}
-          onSave={(v) => { setBudget(v); window.toast.success('বাজেট সংরক্ষণ হয়েছে'); }}
+          onSave={(v) => { setBudget(v); window.toast.success(window.t('app_budget_saved')); }}
         />
       )}
       {modal === 'auth' && (

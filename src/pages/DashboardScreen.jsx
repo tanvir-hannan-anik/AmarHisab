@@ -1,46 +1,46 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Pages / DashboardScreen
-//
-// The home view. Shows the hero balance card (current month), four stat cards,
-// the weekly bar chart + category donut, recent transactions, and a quick
-// debts-and-payments summary.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const { useMemo: useMemoDash } = React;
 
 function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, onSettleDebt }) {
   const { budget, txs, debts, monthLabel } = state;
+  const lang = window.AHLang || 'bn';
+  const s = (window.AHStrings[lang] || window.AHStrings.bn);
+  const catLabel = (c) => lang === 'en' ? (c.en || c.bn) : c.bn;
+  const num = (n) => lang === 'en' ? String(n) : toBn(n);
 
   const monthStart = useMemoDash(() => {
     const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d;
   }, []);
   const monthTxs = useMemoDash(() => txs.filter(t => new Date(t.date) >= monthStart), [txs, monthStart]);
 
-  const spent = monthTxs.reduce((s, t) => s + t.amt, 0);
+  const spent = monthTxs.reduce((a, t) => a + t.amt, 0);
   const remaining = budget - spent;
   const pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
-  const totalBorrowed = debts.filter(d => d.type === 'borrowed').reduce((s, d) => s + d.amt, 0);
-  const totalLent = debts.filter(d => d.type === 'lent').reduce((s, d) => s + d.amt, 0);
+  const totalBorrowed = debts.filter(d => d.type === 'borrowed').reduce((a, d) => a + d.amt, 0);
+  const totalLent = debts.filter(d => d.type === 'lent').reduce((a, d) => a + d.amt, 0);
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const todaySpent = txs.filter(t => new Date(t.date) >= today).reduce((s, t) => s + t.amt, 0);
+  const todaySpent = txs.filter(t => new Date(t.date) >= today).reduce((a, t) => a + t.amt, 0);
 
-  // Bar chart data for the last 7 days, today flagged.
   const weekData = useMemoDash(() => {
-    const days = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'];
+    const days = lang === 'en'
+      ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+      : ['রবি','সোম','মঙ্গল','বুধ','বৃহঃ','শুক্র','শনি'];
     const arr = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
       const end = new Date(d); end.setDate(end.getDate() + 1);
       const v = txs
         .filter(t => { const td = new Date(t.date); return td >= d && td < end; })
-        .reduce((s, t) => s + t.amt, 0);
+        .reduce((a, t) => a + t.amt, 0);
       arr.push({ label: days[d.getDay()], value: v, today: i === 0 });
     }
     return arr;
-  }, [txs]);
+  }, [txs, lang]);
 
-  // Per-category spend for this month, descending.
   const catBreakdown = useMemoDash(() => {
     const map = {};
     monthTxs.forEach(t => { map[t.cat] = (map[t.cat] || 0) + t.amt; });
@@ -58,24 +58,24 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
       <div className="ah-hero">
         <div className="ah-hero-top">
           <div>
-            <div className="ah-hero-eyebrow">বর্তমান ব্যালেন্স · {monthLabel}</div>
+            <div className="ah-hero-eyebrow">{s.d_balance_eyebrow} · {monthLabel}</div>
             <div className="ah-hero-amount"><span className="tk">৳</span>{fmtTk(remaining)}</div>
             <div className="ah-hero-sub">
               {remaining >= 0
-                ? `মাসিক বাজেট থেকে ৳${fmtTk(remaining)} বাকি আছে`
-                : `বাজেট অতিক্রম হয়েছে ৳${fmtTk(-remaining)}`}
+                ? window.t('d_budget_remaining', { amt: fmtTk(remaining) })
+                : window.t('d_budget_exceeded', { amt: fmtTk(-remaining) })}
             </div>
           </div>
           <button className="ah-month-pill" onClick={() => openModal('budget')}>
             <Icon name="target" size={14}/>
-            বাজেট সম্পাদনা
+            {s.d_edit_budget}
           </button>
         </div>
 
         <div className="ah-hero-bar">
           <div className="ah-hero-bar-labels">
-            <span>৳{fmtTk(spent)} খরচ হয়েছে</span>
-            <span>৳{fmtTk(budget)} বাজেট</span>
+            <span>{window.t('d_spent_label', { amt: fmtTk(spent) })}</span>
+            <span>{window.t('d_budget_label', { amt: fmtTk(budget) })}</span>
           </div>
           <div className="ah-hero-bar-track">
             <div className={'ah-hero-bar-fill ' + barClass} style={{width: pct + '%'}}/>
@@ -84,16 +84,16 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
 
         <div className="ah-hero-foot">
           <div className="ah-hero-stat">
-            <div className="lab">আজকের খরচ</div>
+            <div className="lab">{s.d_today_spend}</div>
             <div className="val">৳{fmtTk(todaySpent)}</div>
           </div>
           <div className="ah-hero-stat">
-            <div className="lab">দৈনিক গড়</div>
+            <div className="lab">{s.d_daily_avg}</div>
             <div className="val">৳{fmtTk(Math.round(spent / Math.max(1, new Date().getDate())))}</div>
           </div>
           <div className="ah-hero-stat">
-            <div className="lab">বাজেট ব্যবহার</div>
-            <div className="val">{toBn(Math.round(pct))}%</div>
+            <div className="lab">{s.d_budget_use}</div>
+            <div className="val">{num(Math.round(pct))}%</div>
           </div>
         </div>
       </div>
@@ -101,20 +101,20 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
       {/* STAT CARDS */}
       <div className="ah-stat-grid">
         <StatCard
-          label="মোট খরচ" value={spent} icon="trending-down" tone="red"
-          meta={<><span className="delta up">↑ {toBn(Math.round(pct))}%</span> <span>বাজেটের</span></>}
+          label={s.d_total_spend} value={spent} icon="trending-down" tone="red"
+          meta={<><span className="delta up">↑ {num(Math.round(pct))}%</span> <span>{s.d_of_budget}</span></>}
         />
         <StatCard
-          label="মাসিক বাজেট" value={budget} icon="target" tone="blue"
+          label={s.d_monthly_budget} value={budget} icon="target" tone="blue"
           meta={<span>{monthLabel}</span>}
         />
         <StatCard
-          label="আমি ধার নিয়েছি" value={totalBorrowed} icon="arrow-down" tone="warn"
-          meta={<span>{toBn(debts.filter(d => d.type === 'borrowed').length)} জন ব্যক্তির কাছে</span>}
+          label={s.d_borrowed} value={totalBorrowed} icon="arrow-down" tone="warn"
+          meta={<span>{window.t('d_borrowed_from', { n: num(debts.filter(d => d.type === 'borrowed').length) })}</span>}
         />
         <StatCard
-          label="আমি ধার দিয়েছি" value={totalLent} icon="arrow-up" tone="mint"
-          meta={<span>{toBn(debts.filter(d => d.type === 'lent').length)} জন ব্যক্তিকে</span>}
+          label={s.d_lent} value={totalLent} icon="arrow-up" tone="mint"
+          meta={<span>{window.t('d_lent_to', { n: num(debts.filter(d => d.type === 'lent').length) })}</span>}
         />
       </div>
 
@@ -123,11 +123,11 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
         <div className="ah-card">
           <div className="ah-card-head">
             <div>
-              <div className="ah-card-title">সাপ্তাহিক খরচ</div>
-              <div className="ah-card-sub">গত ৭ দিনের খরচের চিত্র</div>
+              <div className="ah-card-title">{s.d_weekly_chart}</div>
+              <div className="ah-card-sub">{s.d_weekly_chart_sub}</div>
             </div>
             <button className="ah-card-link" onClick={() => state.setTab && state.setTab('history')}>
-              বিস্তারিত <Icon name="arrow-right" size={14}/>
+              {s.d_details} <Icon name="arrow-right" size={14}/>
             </button>
           </div>
           <WeeklyBarChart data={weekData}/>
@@ -136,22 +136,22 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
         <div className="ah-card">
           <div className="ah-card-head">
             <div>
-              <div className="ah-card-title">খরচের ধরন</div>
-              <div className="ah-card-sub">এই মাসে শ্রেণী অনুযায়ী</div>
+              <div className="ah-card-title">{s.d_cat_breakdown}</div>
+              <div className="ah-card-sub">{s.d_cat_breakdown_sub}</div>
             </div>
           </div>
           {catBreakdown.length === 0 ? (
             <div className="ah-empty">
               <div className="ah-empty-ic"><Icon name="piechart" size={24}/></div>
-              <div className="ah-empty-title">এখনো কোন খরচ নেই</div>
-              <div className="ah-empty-sub">আপনার প্রথম খরচ যোগ করুন</div>
+              <div className="ah-empty-title">{s.d_no_spend}</div>
+              <div className="ah-empty-sub">{s.d_add_first}</div>
             </div>
           ) : (
             <div className="ah-donut-row">
               <div className="ah-donut-wrap">
                 <DonutChart data={catBreakdown.map(c => ({ value: c.value, color: c.color }))} size={150} thickness={20}/>
                 <div className="ah-donut-center">
-                  <div className="lab">মোট</div>
+                  <div className="lab">{s.d_total}</div>
                   <div className="val">৳{fmtTk(spent)}</div>
                 </div>
               </div>
@@ -163,7 +163,7 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
                       <div className="ah-cat-row">
                         <div className="ah-cat-name">
                           <span className="ah-cat-emoji" style={{background: c.bg, color: c.color}}>{c.em}</span>
-                          {c.bn}
+                          {catLabel(c)}
                         </div>
                         <div className="ah-cat-val">৳{fmtTk(c.value)}</div>
                       </div>
@@ -187,11 +187,11 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
         <div className="ah-card">
           <div className="ah-card-head">
             <div>
-              <div className="ah-card-title">সাম্প্রতিক হিসাব</div>
-              <div className="ah-card-sub">সর্বশেষ লেনদেনসমূহ</div>
+              <div className="ah-card-title">{s.d_recent_tx}</div>
+              <div className="ah-card-sub">{s.d_recent_tx_sub}</div>
             </div>
             <button className="ah-card-link" onClick={() => state.setTab && state.setTab('history')}>
-              সব দেখুন <Icon name="arrow-right" size={14}/>
+              {s.d_see_all} <Icon name="arrow-right" size={14}/>
             </button>
           </div>
           <div className="ah-tx-list">
@@ -202,24 +202,24 @@ function DashboardScreen({ state, openModal, onEditTx, onDeleteTx, onEditDebt, o
         <div className="ah-card">
           <div className="ah-card-head">
             <div>
-              <div className="ah-card-title">দেনা-পাওনা</div>
-              <div className="ah-card-sub">সাম্প্রতিক ধার-পরিচালনা</div>
+              <div className="ah-card-title">{s.d_debts_title}</div>
+              <div className="ah-card-sub">{s.d_debts_sub}</div>
             </div>
             <button className="ah-card-link" onClick={() => state.setTab && state.setTab('debts')}>
-              সব দেখুন <Icon name="arrow-right" size={14}/>
+              {s.d_see_all} <Icon name="arrow-right" size={14}/>
             </button>
           </div>
 
           <div className="ah-debt-grid">
             <div className="ah-debt-card borrowed">
-              <div className="lab">আমি ধার নিয়েছি</div>
+              <div className="lab">{s.d_borrowed}</div>
               <div className="val"><span className="tk">৳</span>{fmtTk(totalBorrowed)}</div>
-              <div className="sub">{toBn(debts.filter(d => d.type === 'borrowed').length)} জন ব্যক্তির কাছে</div>
+              <div className="sub">{window.t('d_borrowed_from', { n: num(debts.filter(d => d.type === 'borrowed').length) })}</div>
             </div>
             <div className="ah-debt-card lent">
-              <div className="lab">আমি ধার দিয়েছি</div>
+              <div className="lab">{s.d_lent}</div>
               <div className="val"><span className="tk">৳</span>{fmtTk(totalLent)}</div>
-              <div className="sub">{toBn(debts.filter(d => d.type === 'lent').length)} জন ব্যক্তিকে</div>
+              <div className="sub">{window.t('d_lent_to', { n: num(debts.filter(d => d.type === 'lent').length) })}</div>
             </div>
           </div>
 

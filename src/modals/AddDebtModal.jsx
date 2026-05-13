@@ -23,13 +23,13 @@ function AddDebtModal({ initial, onClose, onSave, defaultType = 'borrowed' }) {
 
   const validate = () => {
     const e = {};
-    if (!name.trim()) e.name = 'নাম লিখুন';
-    else if (name.trim().length > 50) e.name = 'নাম ছোট রাখুন';
+    if (!name.trim()) e.name = window.t('mdb_err_name');
+    else if (name.trim().length > 50) e.name = window.t('mdb_err_name_long');
     const n = parseInt(amount, 10);
-    if (!amount.trim()) e.amount = 'পরিমাণ লিখুন';
-    else if (!n || n <= 0) e.amount = 'বৈধ পরিমাণ লিখুন';
-    else if (n > 9999999) e.amount = 'পরিমাণ অনেক বেশি';
-    if (!date) e.date = 'তারিখ লিখুন';
+    if (!amount.trim()) e.amount = window.t('mdb_err_amount');
+    else if (!n || n <= 0) e.amount = window.t('mdb_err_invalid');
+    else if (n > 9999999) e.amount = window.t('mdb_err_large');
+    if (!date) e.date = window.t('mdb_err_date');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -56,22 +56,22 @@ function AddDebtModal({ initial, onClose, onSave, defaultType = 'borrowed' }) {
     <div className="ah-modal-overlay" onClick={onClose}>
       <div className="ah-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="ah-modal-head">
-          <div className="ah-modal-title">{edit ? 'দেনা-পাওনা সম্পাদনা' : 'দেনা-পাওনা যোগ করুন'}</div>
-          <button className="ah-icon-btn" onClick={onClose} aria-label="বন্ধ করুন" style={{width: 32, height: 32}}>
+          <div className="ah-modal-title">{edit ? window.t('mdb_title_edit') : window.t('mdb_title_add')}</div>
+          <button className="ah-icon-btn" onClick={onClose} aria-label={window.t('mdb_close')} style={{width: 32, height: 32}}>
             <Icon name="x" size={16}/>
           </button>
         </div>
         <div className="ah-modal-body">
           <div className="ah-segment">
-            <button className={type==='borrowed' ? 'active' : ''} onClick={() => setType('borrowed')}>আমি ধার নিয়েছি</button>
-            <button className={type==='lent' ? 'active' : ''} onClick={() => setType('lent')}>আমি ধার দিয়েছি</button>
+            <button className={type==='borrowed' ? 'active' : ''} onClick={() => setType('borrowed')}>{window.t('mdb_borrowed')}</button>
+            <button className={type==='lent' ? 'active' : ''} onClick={() => setType('lent')}>{window.t('mdb_lent')}</button>
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">ব্যক্তির নাম</label>
+            <label className="ah-field-label">{window.t('mdb_name_label')}</label>
             <input
               className={'ah-input' + (errors.name ? ' err' : '')}
-              placeholder="যেমন: রহিম ভাই"
+              placeholder={window.t('mdb_name_ph')}
               value={name}
               maxLength={50}
               onChange={e => { setName(e.target.value); if (errors.name) setErrors({...errors, name: undefined}); }}
@@ -81,7 +81,7 @@ function AddDebtModal({ initial, onClose, onSave, defaultType = 'borrowed' }) {
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">টাকার পরিমাণ</label>
+            <label className="ah-field-label">{window.t('mdb_amount_label')}</label>
             <div style={{position: 'relative'}}>
               <span style={{position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', fontSize: 22, color: '#9AA3AC', fontWeight: 500}}>৳</span>
               <input
@@ -97,7 +97,7 @@ function AddDebtModal({ initial, onClose, onSave, defaultType = 'borrowed' }) {
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">তারিখ</label>
+            <label className="ah-field-label">{window.t('mdb_date_label')}</label>
             <input type="date" className={'ah-input' + (errors.date ? ' err' : '')}
               value={date}
               onChange={e => { setDate(e.target.value); if (errors.date) setErrors({...errors, date: undefined}); }}
@@ -106,10 +106,10 @@ function AddDebtModal({ initial, onClose, onSave, defaultType = 'borrowed' }) {
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">নোট (ঐচ্ছিক)</label>
+            <label className="ah-field-label">{window.t('mdb_note_label')}</label>
             <input
               className="ah-input"
-              placeholder="যেমন: মাস শেষে ফেরত"
+              placeholder={window.t('mdb_note_ph')}
               value={note}
               maxLength={120}
               onChange={e => setNote(e.target.value)}
@@ -117,9 +117,9 @@ function AddDebtModal({ initial, onClose, onSave, defaultType = 'borrowed' }) {
           </div>
         </div>
         <div className="ah-modal-foot">
-          <button className="ah-btn ah-btn-ghost" onClick={onClose} disabled={saving}>বাতিল</button>
+          <button className="ah-btn ah-btn-ghost" onClick={onClose} disabled={saving}>{window.t('mdb_cancel')}</button>
           <button className="ah-btn ah-btn-primary" onClick={submit} disabled={saving}>
-            {saving ? '...সংরক্ষণ' : 'সংরক্ষণ করুন'}
+            {saving ? window.t('mdb_saving') : window.t('mdb_save')}
           </button>
         </div>
       </div>

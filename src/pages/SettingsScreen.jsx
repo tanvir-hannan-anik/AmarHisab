@@ -44,6 +44,9 @@ function SettingsScreen({ setState, palette, setPalette, settings: settingsProp,
   const [localSettings, setSettings] = useStateSet(() => settingsProp || AHStorage.loadSettings());
   const settings = settingsProp || localSettings;
 
+  const lang = settings.lang || 'bn';
+  const s = window.AHStrings[lang] || window.AHStrings.bn;
+
   const toggle = (k) => {
     const fresh = AHStorage.loadSettings();
     const next = { ...fresh, [k]: !fresh[k] };
@@ -51,32 +54,41 @@ function SettingsScreen({ setState, palette, setPalette, settings: settingsProp,
     AHStorage.saveSettings(next);
   };
 
+  const setLang = (newLang) => {
+    const fresh = AHStorage.loadSettings();
+    const next = { ...fresh, lang: newLang };
+    setSettings(next);
+    AHStorage.saveSettings(next);
+  };
+
   const paletteKey = JSON.stringify(palette || []);
 
   const handleReset = async () => {
+    const _s = window.AHStrings[settings.lang || 'bn'] || window.AHStrings.bn;
     const ok = await window.confirmDialog({
-      title: 'ডেটা রিসেট',
-      message: 'সব হিসাব, দেনা-পাওনা ও বাজেট মুছে গিয়ে শূন্য থেকে শুরু হবে। এই কাজ ফেরানো যাবে না।',
-      okLabel: 'রিসেট করুন',
+      title: _s.dlg_reset_title,
+      message: _s.dlg_reset_msg,
+      okLabel: _s.dlg_reset_ok,
       tone: 'danger',
     });
     if (!ok) return;
     AHStorage.resetAll([], [], 0);
-    setState(s => ({ ...s, txs: [], debts: [], budget: 0, catBudgets: {} }));
-    window.toast.success('ডেটা রিসেট হয়েছে');
+    setState(prev => ({ ...prev, txs: [], debts: [], budget: 0, catBudgets: {} }));
+    window.toast.success(_s.toast_reset);
   };
 
   const handleClear = async () => {
+    const _s = window.AHStrings[settings.lang || 'bn'] || window.AHStrings.bn;
     const ok = await window.confirmDialog({
-      title: 'সব ডেটা মুছুন',
-      message: 'আপনার সব ব্যক্তিগত ডেটা মুছে যাবে। নিশ্চিত?',
-      okLabel: 'মুছে ফেলুন',
+      title: _s.dlg_delete_title,
+      message: _s.dlg_delete_msg,
+      okLabel: _s.dlg_delete_ok,
       tone: 'danger',
     });
     if (!ok) return;
     AHStorage.resetAll([], [], 0);
-    setState(s => ({ ...s, txs: [], debts: [], budget: 0, catBudgets: {} }));
-    window.toast.success('সব ডেটা মুছে ফেলা হয়েছে');
+    setState(prev => ({ ...prev, txs: [], debts: [], budget: 0, catBudgets: {} }));
+    window.toast.success(_s.toast_deleted);
   };
 
   return (
@@ -96,8 +108,8 @@ function SettingsScreen({ setState, palette, setPalette, settings: settingsProp,
       <div className="ah-card" style={{marginTop: 20}}>
         <div className="ah-card-head">
           <div>
-            <div className="ah-card-title">থিম রঙ</div>
-            <div className="ah-card-sub">আপনার পছন্দের প্যালেট বাছুন</div>
+            <div className="ah-card-title">{s.set_theme_title}</div>
+            <div className="ah-card-sub">{s.set_theme_sub}</div>
           </div>
         </div>
         <div className="ah-palette-grid">
@@ -109,7 +121,7 @@ function SettingsScreen({ setState, palette, setPalette, settings: settingsProp,
                 type="button"
                 className={'ah-palette-card ' + (selected ? 'active' : '')}
                 onClick={() => setPalette && setPalette(opt)}
-                aria-label={'প্যালেট ' + toBn(i + 1)}
+                aria-label={'Palette ' + (i + 1)}
                 aria-pressed={selected}
                 title={opt.join(' · ')}
               >
@@ -130,19 +142,40 @@ function SettingsScreen({ setState, palette, setPalette, settings: settingsProp,
       <div className="ah-card" style={{marginTop: 20}}>
         <div className="ah-card-head">
           <div>
-            <div className="ah-card-title">নোটিফিকেশন</div>
-            <div className="ah-card-sub">কখন আমরা আপনাকে জানাব</div>
+            <div className="ah-card-title">{s.set_lang_title}</div>
+            <div className="ah-card-sub">{s.set_lang_sub}</div>
+          </div>
+        </div>
+        <div style={{display: 'flex', gap: 8, marginTop: 4}}>
+          <button
+            type="button"
+            className={'ah-btn ' + (lang === 'bn' ? 'ah-btn-primary' : 'ah-btn-ghost')}
+            onClick={() => setLang('bn')}
+          >{s.set_lang_bn}</button>
+          <button
+            type="button"
+            className={'ah-btn ' + (lang === 'en' ? 'ah-btn-primary' : 'ah-btn-ghost')}
+            onClick={() => setLang('en')}
+          >{s.set_lang_en}</button>
+        </div>
+      </div>
+
+      <div className="ah-card" style={{marginTop: 20}}>
+        <div className="ah-card-head">
+          <div>
+            <div className="ah-card-title">{s.set_notif_title}</div>
+            <div className="ah-card-sub">{s.set_notif_sub}</div>
           </div>
         </div>
         <SettingToggleRow
-          title="বাজেট সতর্কতা"
-          sub="বাজেটের ৮০% খরচ হলে জানাব"
+          title={s.set_budget_alert}
+          sub={s.set_budget_alert_sub}
           on={settings.notifyBudget}
           onChange={() => toggle('notifyBudget')}
         />
         <SettingToggleRow
-          title="দেনা-পাওনা স্মরণ"
-          sub="সাত দিনের বেশি পুরোনো ধার মনে করিয়ে দেব"
+          title={s.set_debt_remind}
+          sub={s.set_debt_remind_sub}
           on={settings.notifyDebt}
           onChange={() => toggle('notifyDebt')}
         />
@@ -151,16 +184,16 @@ function SettingsScreen({ setState, palette, setPalette, settings: settingsProp,
       <div className="ah-card" style={{marginTop: 20}}>
         <div className="ah-card-head">
           <div>
-            <div className="ah-card-title">ডেটা ব্যবস্থাপনা</div>
-            <div className="ah-card-sub">আপনার সংরক্ষিত তথ্য পরিচালনা</div>
+            <div className="ah-card-title">{s.set_data_title}</div>
+            <div className="ah-card-sub">{s.set_data_sub}</div>
           </div>
         </div>
         <div style={{display: 'flex', gap: 10, flexWrap: 'wrap'}}>
           <button className="ah-btn ah-btn-ghost" onClick={handleReset}>
-            <Icon name="settings" size={14}/> ডেটা রিসেট
+            <Icon name="settings" size={14}/> {s.set_data_reset}
           </button>
           <button className="ah-btn ah-btn-danger" onClick={handleClear}>
-            <Icon name="trash" size={14}/> সব ডেটা মুছুন
+            <Icon name="trash" size={14}/> {s.set_data_delete}
           </button>
         </div>
       </div>

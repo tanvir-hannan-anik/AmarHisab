@@ -46,11 +46,11 @@ function AddTxModal({ initial, onClose, onSave, defaultType = 'expense' }) {
   const validate = () => {
     const e = {};
     const n = parseInt(amount, 10);
-    if (!amount.trim()) e.amount = 'পরিমাণ লিখুন';
-    else if (!n || n <= 0) e.amount = 'বৈধ পরিমাণ লিখুন';
-    else if (n > 9999999) e.amount = 'পরিমাণ অনেক বেশি';
-    if (!date) e.date = 'তারিখ লিখুন';
-    else if (new Date(date) > new Date()) e.date = 'ভবিষ্যৎ তারিখ গ্রহণযোগ্য নয়';
+    if (!amount.trim()) e.amount = window.t('mtx_err_amount');
+    else if (!n || n <= 0) e.amount = window.t('mtx_err_invalid');
+    else if (n > 9999999) e.amount = window.t('mtx_err_large');
+    if (!date) e.date = window.t('mtx_err_date');
+    else if (new Date(date) > new Date()) e.date = window.t('mtx_err_future');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -82,19 +82,19 @@ function AddTxModal({ initial, onClose, onSave, defaultType = 'expense' }) {
     <div className="ah-modal-overlay" onClick={onClose}>
       <div className="ah-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="ah-modal-head">
-          <div className="ah-modal-title">{edit ? 'হিসাব সম্পাদনা' : 'হিসাব যোগ করুন'}</div>
-          <button className="ah-icon-btn" onClick={onClose} aria-label="বন্ধ করুন" style={{width: 32, height: 32}}>
+          <div className="ah-modal-title">{edit ? window.t('mtx_title_edit') : window.t('mtx_title_add')}</div>
+          <button className="ah-icon-btn" onClick={onClose} aria-label={window.t('mtx_close')} style={{width: 32, height: 32}}>
             <Icon name="x" size={16}/>
           </button>
         </div>
         <div className="ah-modal-body">
           <div className="ah-segment">
-            <button className={type==='expense' ? 'active' : ''} onClick={() => setType('expense')}>খরচ</button>
-            <button className={type==='income' ? 'active' : ''} onClick={() => setType('income')}>আয়</button>
+            <button className={type==='expense' ? 'active' : ''} onClick={() => setType('expense')}>{window.t('mtx_expense')}</button>
+            <button className={type==='income' ? 'active' : ''} onClick={() => setType('income')}>{window.t('mtx_income')}</button>
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">টাকার পরিমাণ</label>
+            <label className="ah-field-label">{window.t('mtx_amount_label')}</label>
             <div style={{position: 'relative'}}>
               <span style={{position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', fontSize: 22, color: '#9AA3AC', fontWeight: 500}}>৳</span>
               <input
@@ -112,22 +112,25 @@ function AddTxModal({ initial, onClose, onSave, defaultType = 'expense' }) {
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">খরচের ধরন</label>
+            <label className="ah-field-label">{window.t('mtx_cat_label')}</label>
             <div className="ah-cat-grid">
-              {CATEGORIES.map(c => (
-                <button key={c.id} className={'ah-cat-pick ' + (cat===c.id ? 'active' : '')} onClick={() => setCat(c.id)}>
-                  <span className="em" style={{background: c.bg, color: c.color}}>{c.em}</span>
-                  <span className="nm">{c.bn}</span>
-                </button>
-              ))}
+              {CATEGORIES.map(c => {
+                const cl = (window.AHLang === 'en') ? (c.en || c.bn) : c.bn;
+                return (
+                  <button key={c.id} className={'ah-cat-pick ' + (cat===c.id ? 'active' : '')} onClick={() => setCat(c.id)}>
+                    <span className="em" style={{background: c.bg, color: c.color}}>{c.em}</span>
+                    <span className="nm">{cl}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">বিবরণ</label>
+            <label className="ah-field-label">{window.t('mtx_desc_label')}</label>
             <input
               className="ah-input"
-              placeholder="যেমন: দুপুরের খাবার"
+              placeholder={window.t('mtx_desc_ph')}
               value={desc}
               maxLength={80}
               onChange={e => setDesc(e.target.value)}
@@ -135,7 +138,7 @@ function AddTxModal({ initial, onClose, onSave, defaultType = 'expense' }) {
           </div>
 
           <div className="ah-field">
-            <label className="ah-field-label">তারিখ</label>
+            <label className="ah-field-label">{window.t('mtx_date_label')}</label>
             <input
               type="date"
               className={'ah-input' + (errors.date ? ' err' : '')}
@@ -147,9 +150,9 @@ function AddTxModal({ initial, onClose, onSave, defaultType = 'expense' }) {
           </div>
         </div>
         <div className="ah-modal-foot">
-          <button className="ah-btn ah-btn-ghost" onClick={onClose} disabled={saving}>বাতিল</button>
+          <button className="ah-btn ah-btn-ghost" onClick={onClose} disabled={saving}>{window.t('mtx_cancel')}</button>
           <button className="ah-btn ah-btn-primary" onClick={submit} disabled={saving}>
-            {saving ? '...সংরক্ষণ' : 'সংরক্ষণ করুন'}
+            {saving ? window.t('mtx_saving') : window.t('mtx_save')}
           </button>
         </div>
       </div>

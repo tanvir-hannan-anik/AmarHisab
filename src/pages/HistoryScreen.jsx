@@ -1,8 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Pages / HistoryScreen
-//
-// Full transaction history with period (week/month/all) tabs, category filter
-// pills, and text search. Renders grouped-by-day with per-day totals.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const { useState: useStateHist, useMemo: useMemoHist } = React;
@@ -12,6 +9,11 @@ function HistoryScreen({ state, onEditTx, onDeleteTx }) {
   const [filter, setFilter] = useStateHist('all');
   const [period, setPeriod] = useStateHist('month');
   const [search, setSearch] = useStateHist('');
+
+  const lang = window.AHLang || 'bn';
+  const s = window.AHStrings[lang] || window.AHStrings.bn;
+  const catLabel = (c) => lang === 'en' ? (c.en || c.bn) : c.bn;
+  const num = (n) => lang === 'en' ? String(n) : toBn(n);
 
   const filtered = useMemoHist(() => {
     const now = new Date();
@@ -31,43 +33,44 @@ function HistoryScreen({ state, onEditTx, onDeleteTx }) {
     });
   }, [txs, filter, period, search]);
 
-  const total = filtered.reduce((s, t) => s + t.amt, 0);
+  const total = filtered.reduce((a, t) => a + t.amt, 0);
   const grouped = useMemoHist(() => groupTxByDay(filtered), [filtered]);
 
   return (
     <div className="ah-content-inner">
       <div className="ah-tab-row">
-        <button className={period==='week' ? 'active' : ''} onClick={() => setPeriod('week')}>সাপ্তাহিক</button>
-        <button className={period==='month' ? 'active' : ''} onClick={() => setPeriod('month')}>মাসিক</button>
-        <button className={period==='all' ? 'active' : ''} onClick={() => setPeriod('all')}>সব</button>
+        <button className={period==='week' ? 'active' : ''} onClick={() => setPeriod('week')}>{s.h_weekly}</button>
+        <button className={period==='month' ? 'active' : ''} onClick={() => setPeriod('month')}>{s.h_monthly}</button>
+        <button className={period==='all' ? 'active' : ''} onClick={() => setPeriod('all')}>{s.h_all}</button>
       </div>
 
       <div className="ah-stat-grid ah-history-stats">
-        <StatCard label="মোট খরচ" value={total} icon="trending-down" tone="red"
-          meta={<span>{toBn(filtered.length)}টি লেনদেন</span>}/>
-        <StatCard label="দৈনিক গড়" value={Math.round(total / Math.max(1, grouped.length))}
-          icon="calendar" tone="blue" meta={<span>{toBn(grouped.length)} দিনে</span>}/>
-        <StatCard label="সর্বোচ্চ" value={filtered.reduce((m, t) => Math.max(m, t.amt), 0)}
-          icon="trending-up" tone="warn" meta={<span>একদিনের সর্বোচ্চ</span>}/>
+        <StatCard label={s.h_total_spend} value={total} icon="trending-down" tone="red"
+          meta={<span>{window.t('h_tx_count', { n: num(filtered.length) })}</span>}/>
+        <StatCard label={s.h_daily_avg} value={Math.round(total / Math.max(1, grouped.length))}
+          icon="calendar" tone="blue"
+          meta={<span>{window.t('h_days', { n: num(grouped.length) })}</span>}/>
+        <StatCard label={s.h_max} value={filtered.reduce((m, t) => Math.max(m, t.amt), 0)}
+          icon="trending-up" tone="warn" meta={<span>{s.h_max_day}</span>}/>
       </div>
 
       <div className="ah-card" style={{marginTop: 20}}>
         <div className="ah-card-head" style={{flexWrap: 'wrap', gap: 12, marginBottom: 16}}>
           <div>
-            <div className="ah-card-title">সকল লেনদেন</div>
-            <div className="ah-card-sub">তারিখ ও ধরন অনুযায়ী ফিল্টার করুন</div>
+            <div className="ah-card-title">{s.h_all_tx}</div>
+            <div className="ah-card-sub">{s.h_filter_hint}</div>
           </div>
           <div className="ah-search">
             <Icon name="search" size={16}/>
-            <input placeholder="খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}/>
+            <input placeholder={s.h_search_ph} value={search} onChange={e => setSearch(e.target.value)}/>
           </div>
         </div>
 
         <div className="ah-filter-bar">
-          <button className={'ah-filter ' + (filter==='all' ? 'active' : '')} onClick={() => setFilter('all')}>সব ধরন</button>
+          <button className={'ah-filter ' + (filter==='all' ? 'active' : '')} onClick={() => setFilter('all')}>{s.h_all_types}</button>
           {CATEGORIES.map(c => (
             <button key={c.id} className={'ah-filter ' + (filter===c.id ? 'active' : '')} onClick={() => setFilter(c.id)}>
-              <span>{c.em}</span> {c.bn}
+              <span>{c.em}</span> {catLabel(c)}
             </button>
           ))}
         </div>
@@ -75,16 +78,16 @@ function HistoryScreen({ state, onEditTx, onDeleteTx }) {
         {grouped.length === 0 ? (
           <div className="ah-empty">
             <div className="ah-empty-ic"><Icon name="inbox" size={24}/></div>
-            <div className="ah-empty-title">কোন লেনদেন পাওয়া যায়নি</div>
-            <div className="ah-empty-sub">ফিল্টার পরিবর্তন করুন বা নতুন হিসাব যোগ করুন</div>
+            <div className="ah-empty-title">{s.h_no_tx}</div>
+            <div className="ah-empty-sub">{s.h_no_tx_sub}</div>
           </div>
         ) : (
           <div>
-            {grouped.map(({ day, items, total }) => (
+            {grouped.map(({ day, items, total: dayTotal }) => (
               <div key={day}>
                 <div className="ah-tx-day-head">
                   <span>{fmtDayHead(day)}</span>
-                  <span className="total">−৳{fmtTk(total)}</span>
+                  <span className="total">−৳{fmtTk(dayTotal)}</span>
                 </div>
                 <div className="ah-tx-list">
                   {items.map(t => <TxRow key={t.id} tx={t} onEdit={onEditTx} onDelete={onDeleteTx}/>)}

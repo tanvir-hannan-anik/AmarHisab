@@ -1,15 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Pages / RemindersScreen
-//
-// Aggregates active reminders from app state: aging debts (>7 days) and budget
-// warnings (>=80% / over). Pure derivation — no separate stored list.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function RemindersScreen({ state }) {
   const { debts, txs, budget } = state;
+  const lang = window.AHLang || 'bn';
+  const s = window.AHStrings[lang] || window.AHStrings.bn;
+  const num = (n) => lang === 'en' ? String(n) : toBn(n);
+
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-  const spent = txs.filter(t => new Date(t.date) >= monthStart).reduce((s, t) => s + t.amt, 0);
+  const spent = txs.filter(t => new Date(t.date) >= monthStart).reduce((a, t) => a + t.amt, 0);
   const pct = budget ? Math.min(999, (spent / budget) * 100) : 0;
   const daysLeft = Math.max(0, new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() - today.getDate());
 
@@ -20,9 +21,9 @@ function RemindersScreen({ state }) {
       items.push({
         id: 'r-' + d.id,
         title: d.type === 'borrowed'
-          ? `${d.name}-কে ৳${fmtTk(d.amt)} ফেরত দেওয়া বাকি`
-          : `${d.name}-এর কাছ থেকে ৳${fmtTk(d.amt)} পাবেন`,
-        sub: `${toBn(age)} দিন আগে · ${d.note || (d.type === 'borrowed' ? 'ধার নেওয়া' : 'ধার দেওয়া')}`,
+          ? window.t('rm_borrowed_remind', { name: d.name, amt: fmtTk(d.amt) })
+          : window.t('rm_lent_remind', { name: d.name, amt: fmtTk(d.amt) }),
+        sub: `${window.t('rm_days_ago', { n: num(age) })} · ${d.note || (d.type === 'borrowed' ? s.rm_borrowed_type : s.rm_lent_type)}`,
         tone: d.type === 'borrowed' ? 'warn' : 'mint',
         icon: 'handshake',
       });
@@ -31,16 +32,16 @@ function RemindersScreen({ state }) {
   if (pct >= 80 && pct < 100) {
     items.push({
       id: 'r-budget-warn',
-      title: 'বাজেট সীমার কাছাকাছি',
-      sub: `${toBn(Math.round(pct))}% খরচ হয়েছে · ${toBn(daysLeft)} দিন বাকি`,
+      title: s.rm_budget_near,
+      sub: window.t('rm_budget_near_sub', { pct: num(Math.round(pct)), days: num(daysLeft) }),
       tone: 'warn', icon: 'bell',
     });
   }
   if (pct >= 100) {
     items.push({
       id: 'r-budget-over',
-      title: 'বাজেট অতিক্রান্ত!',
-      sub: `সীমার চেয়ে ৳${fmtTk(spent - budget)} বেশি`,
+      title: s.rm_budget_over,
+      sub: window.t('rm_budget_over_sub', { amt: fmtTk(spent - budget) }),
       tone: 'red', icon: 'bell',
     });
   }
@@ -50,15 +51,15 @@ function RemindersScreen({ state }) {
       <div className="ah-card">
         <div className="ah-card-head">
           <div>
-            <div className="ah-card-title">সক্রিয় রিমাইন্ডার</div>
-            <div className="ah-card-sub">গুরুত্বপূর্ণ স্মরণ ও সতর্কতা</div>
+            <div className="ah-card-title">{s.rm_title}</div>
+            <div className="ah-card-sub">{s.rm_sub}</div>
           </div>
         </div>
         {items.length === 0 ? (
           <div className="ah-empty">
             <div className="ah-empty-ic"><Icon name="bell" size={24}/></div>
-            <div className="ah-empty-title">কোন রিমাইন্ডার নেই</div>
-            <div className="ah-empty-sub">আপনার সবকিছু ঠিক আছে</div>
+            <div className="ah-empty-title">{s.rm_empty}</div>
+            <div className="ah-empty-sub">{s.rm_empty_sub}</div>
           </div>
         ) : (
           <div className="ah-reminder-list">
